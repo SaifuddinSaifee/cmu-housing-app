@@ -37,7 +37,7 @@ The CMU-SV Housing App is a comprehensive solution designed to address the housi
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-username/cmu-sv-housing-app.git
+   git clone https://github.com/SaifuddinSaifee/cmu-housing-app.git
    cd cmu-sv-housing-app
    ```
 
@@ -121,5 +121,5 @@ For detailed API documentation, please refer to the Swagger documentation availa
 
 ## Acknowledgments
 
-- Mustafa Saifee for the project idea, innovation, idea, and feedback.
+- @saifeemustafaq for the project idea, innovation, idea, and feedback.
 - Carnegie Mellon University Silicon Valley campus for inspiring this project
