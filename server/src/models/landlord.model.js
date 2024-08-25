@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 const LandlordSchema = new mongoose.Schema(
   {
@@ -25,6 +25,10 @@ const LandlordSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please provide a password"],
       minlength: 8,
+      select: false,
+    },
+    salt: {
+      type: String,
       select: false,
     },
     phone: {
@@ -54,19 +58,36 @@ const LandlordSchema = new mongoose.Schema(
   }
 );
 
-// Hash the password before saving
-LandlordSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 12);
+LandlordSchema.methods.setPassword = function (password) {
+  this.salt = crypto.randomBytes(16).toString("hex");
+  this.password = crypto
+    .pbkdf2Sync(password, this.salt, 10000, 64, "sha512")
+    .toString("hex");
+};
+
+LandlordSchema.methods.validPassword = function (password) {
+  const hash = crypto
+    .pbkdf2Sync(password, this.salt, 10000, 64, "sha512")
+    .toString("hex");
+  return this.password === hash;
+};
+
+LandlordSchema.pre("save", function (next) {
+  if (this.isModified("password") && !this.salt) {
+    this.setPassword(this.password);
+  }
   next();
 });
 
-// Method to check if password is correct
-LandlordSchema.methods.correctPassword = async function (
-  candidatePassword,
-  userPassword
-) {
-  return await bcrypt.compare(candidatePassword, userPassword);
+LandlordSchema.methods.correctPassword = async function (candidatePassword) {
+  console.log("User ID:", this._id);
+  console.log("User Email:", this.email);
+  console.log("Hashed Password in DB:", this.password);
+  console.log("Plain text password provided:", candidatePassword);
+
+  const isMatch = this.validPassword(candidatePassword);
+  console.log("Password match:", isMatch);
+  return isMatch;
 };
 
 const Landlord = mongoose.model("Landlord", LandlordSchema);

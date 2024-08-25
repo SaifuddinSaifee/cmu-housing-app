@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const Admin = require('../models/admin.model');
 const config = require('../config');
-const bcrypt = require('bcryptjs');
 
 mongoose.connect(config.mongoUri, {
   useNewUrlParser: true,
@@ -10,22 +9,28 @@ mongoose.connect(config.mongoUri, {
 
 const seedAdmin = async () => {
   try {
-    const existingAdmin = await Admin.findOne({ email: 'cmusvha@email.com' });
-    if (existingAdmin) {
-      console.log('Admin already exists');
-      return;
-    }
+    await Admin.deleteMany({});
+    console.log("Cleared existing admin users");
 
-    const hashedPassword = await bcrypt.hash('cmusvha@email.com', 12);
     const newAdmin = new Admin({
       name: 'Admin User',
-      email: 'cmusvha@email.com',
-      password: hashedPassword,
+      email: 'admin@gmail.com',
       role: 'admin'
     });
 
-    await newAdmin.save();
+    newAdmin.setPassword('password123');
+
+    const savedAdmin = await newAdmin.save();
     console.log('Admin user created successfully');
+    console.log('Saved admin details:', {
+      id: savedAdmin._id,
+      email: savedAdmin.email
+    });
+
+    // Verify the password immediately after saving
+    const isPasswordCorrect = savedAdmin.validPassword('password123');
+    console.log("Immediate password verification result:", isPasswordCorrect);
+
   } catch (error) {
     console.error('Error seeding admin:', error);
   } finally {

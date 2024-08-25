@@ -15,7 +15,24 @@ const router = express.Router();
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Landlord'
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *               - phone
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               preferredContactMethod:
+ *                 type: string
+ *                 enum: [email, phone]
  *     responses:
  *       201:
  *         description: Landlord registered successfully

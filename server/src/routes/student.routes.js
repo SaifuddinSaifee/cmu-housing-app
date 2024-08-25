@@ -15,7 +15,40 @@ const router = express.Router();
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Student'
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *               - gender
+ *               - programName
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               gender:
+ *                 type: string
+ *                 enum: [male, female, other]
+ *               programName:
+ *                 type: string
+ *               roomPreference:
+ *                 type: string
+ *                 enum: [private, shared]
+ *               smokingPreference:
+ *                 type: string
+ *                 enum: [noSmoke, smoke, noSmokeHouse]
+ *               alcoholPreference:
+ *                 type: string
+ *                 enum: [noDrink, drink, noDrinkHouse]
+ *               petPreference:
+ *                 type: string
+ *                 enum: [noPet, hasPet, acceptsPet]
+ *               foodPreference:
+ *                 type: string
+ *                 enum: [veg, nonVeg, vegHouse]
  *     responses:
  *       201:
  *         description: Student registered successfully

@@ -1,13 +1,11 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 const StudentSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: [true, "Please provide a name"],
-      trim: true,
-      maxlength: [50, "Name cannot be more than 50 characters"],
     },
     email: {
       type: String,
@@ -16,19 +14,28 @@ const StudentSchema = new mongoose.Schema(
       lowercase: true,
       validate: {
         validator: function (v) {
-          return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v);
+          return /^[\w-\.]+@andrew\.cmu\.edu$/.test(v);
         },
-        message: (props) => `${props.value} is not a valid email!`,
+        message: (props) => `${props.value} is not a valid Andrew email!`,
       },
     },
     password: {
       type: String,
-      required: [true, "Please provide a minimum 8 character password"],
+      required: [true, "Please provide a password"],
       minlength: 8,
       select: false,
     },
+    salt: {
+      type: String,
+      select: false,
+    },
     linkedinUrl: String,
-    program: {
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+      required: [true, "Please specify your gender"],
+    },
+    programName: {
       type: String,
       required: [true, "Please provide your program name"],
     },
@@ -37,27 +44,27 @@ const StudentSchema = new mongoose.Schema(
     roomPreference: {
       type: String,
       enum: ["private", "shared"],
-      default: "private",
+      required: [true, "Please specify your room preference"],
     },
     smokingPreference: {
       type: String,
       enum: ["noSmoke", "smoke", "noSmokeHouse"],
-      default: "noSmoke",
+      required: [true, "Please specify your smoking preference"],
     },
     alcoholPreference: {
       type: String,
       enum: ["noDrink", "drink", "noDrinkHouse"],
-      default: "noDrink",
+      required: [true, "Please specify your alcohol preference"],
     },
     petPreference: {
       type: String,
       enum: ["noPet", "hasPet", "acceptsPet"],
-      default: "noPet",
+      required: [true, "Please specify your pet preference"],
     },
     foodPreference: {
       type: String,
       enum: ["veg", "nonVeg", "vegHouse"],
-      default: "nonVeg",
+      required: [true, "Please specify your food preference"],
     },
     medicalCondition: String,
     otherRequirements: String,
@@ -77,19 +84,36 @@ const StudentSchema = new mongoose.Schema(
   }
 );
 
-// Hash the password before saving
-StudentSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 12);
+StudentSchema.methods.setPassword = function (password) {
+  this.salt = crypto.randomBytes(16).toString("hex");
+  this.password = crypto
+    .pbkdf2Sync(password, this.salt, 10000, 64, "sha512")
+    .toString("hex");
+};
+
+StudentSchema.methods.validPassword = function (password) {
+  const hash = crypto
+    .pbkdf2Sync(password, this.salt, 10000, 64, "sha512")
+    .toString("hex");
+  return this.password === hash;
+};
+
+StudentSchema.pre("save", function (next) {
+  if (this.isModified("password") && !this.salt) {
+    this.setPassword(this.password);
+  }
   next();
 });
 
-// Method to check if password is correct
-StudentSchema.methods.correctPassword = async function (
-  candidatePassword,
-  userPassword
-) {
-  return await bcrypt.compare(candidatePassword, userPassword);
+StudentSchema.methods.correctPassword = async function (candidatePassword) {
+  console.log("User ID:", this._id);
+  console.log("User Email:", this.email);
+  console.log("Hashed Password in DB:", this.password);
+  console.log("Plain text password provided:", candidatePassword);
+
+  const isMatch = this.validPassword(candidatePassword);
+  console.log("Password match:", isMatch);
+  return isMatch;
 };
 
 const Student = mongoose.model("Student", StudentSchema);

@@ -12,53 +12,50 @@ const signToken = (id) => {
       expiresIn: config.jwtExpiresIn,
     });
   } catch (error) {
-    console.error('Error signing token:', error);
+    console.error("Error signing token:", error);
     throw error;
   }
 };
 
 exports.login = async (req, res, next) => {
   try {
+    console.log("Login attempt for:", req.body.email);
+
     const { email, password } = req.body;
 
-    console.log('Login attempt for:', email); // Log the login attempt
-
-    // 1) Check if email and password exist
     if (!email || !password) {
-      return res.status(400).json({ status: "fail", message: "Please provide email and password" });
+      return res
+        .status(400)
+        .json({ status: "fail", message: "Please provide email and password" });
     }
 
-    // 2) Check if admin exists && password is correct
-    const admin = await Admin.findOne({ email }).select("+password");
-    console.log('Admin found:', !!admin); // Log whether admin was found
+    const admin = await Admin.findOne({ email }).select("+password +salt");
+    console.log("Admin found:", !!admin);
 
-    if (!admin) {
-      return res.status(401).json({ status: "fail", message: "Incorrect email or password" });
+    if (!admin || !admin.validPassword(password)) {
+      return res
+        .status(401)
+        .json({ status: "fail", message: "Incorrect email or password" });
     }
 
-    const isPasswordCorrect = await admin.correctPassword(password, admin.password);
-    console.log('Password correct:', isPasswordCorrect); // Log password check result
-
-    if (!isPasswordCorrect) {
-      return res.status(401).json({ status: "fail", message: "Incorrect email or password" });
-    }
-
-    // 3) If everything ok, send token to client
     const token = signToken(admin._id);
-
-    // Remove password from output
-    admin.password = undefined;
 
     res.status(200).json({
       status: "success",
       token,
       data: {
-        admin,
+        admin: {
+          id: admin._id,
+          email: admin.email,
+          role: admin.role,
+        },
       },
     });
   } catch (err) {
-    console.error('Login error:', err); // Log any errors
-    res.status(500).json({ status: "error", message: "An error occurred during login" });
+    console.error("Login error:", err);
+    res
+      .status(500)
+      .json({ status: "error", message: "An error occurred during login" });
   }
 };
 
