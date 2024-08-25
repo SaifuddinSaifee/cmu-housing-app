@@ -1,4 +1,4 @@
-const Student = require("../models/student.model");
+const Landlord = require("../models/landlord.model");
 const jwt = require("jsonwebtoken");
 const config = require("../config");
 
@@ -10,14 +10,14 @@ const signToken = (id) => {
 
 exports.signup = async (req, res) => {
   try {
-    const newStudent = await Student.create(req.body);
-    const token = signToken(newStudent._id);
+    const newLandlord = await Landlord.create(req.body);
+    const token = signToken(newLandlord._id);
 
     res.status(201).json({
       status: "success",
       token,
       data: {
-        student: newStudent,
+        landlord: newLandlord,
       },
     });
   } catch (err) {
@@ -32,7 +32,6 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if email and password exist
     if (!email || !password) {
       return res.status(400).json({
         status: "fail",
@@ -40,12 +39,11 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check if user exists && password is correct
-    const student = await Student.findOne({ email }).select("+password");
+    const landlord = await Landlord.findOne({ email }).select("+password");
 
     if (
-      !student ||
-      !(await student.correctPassword(password, student.password))
+      !landlord ||
+      !(await landlord.correctPassword(password, landlord.password))
     ) {
       return res.status(401).json({
         status: "fail",
@@ -53,8 +51,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    // If everything ok, send token to client
-    const token = signToken(student._id);
+    const token = signToken(landlord._id);
     res.status(200).json({
       status: "success",
       token,
@@ -67,15 +64,15 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.getAllStudents = async (req, res) => {
+exports.getAllLandlords = async (req, res) => {
   try {
-    const students = await Student.find();
+    const landlords = await Landlord.find();
 
     res.status(200).json({
       status: "success",
-      results: students.length,
+      results: landlords.length,
       data: {
-        students,
+        landlords,
       },
     });
   } catch (err) {
@@ -86,21 +83,21 @@ exports.getAllStudents = async (req, res) => {
   }
 };
 
-exports.getStudent = async (req, res) => {
+exports.getLandlord = async (req, res) => {
   try {
-    const student = await Student.findById(req.params.id);
+    const landlord = await Landlord.findById(req.params.id);
 
-    if (!student) {
+    if (!landlord) {
       return res.status(404).json({
         status: "fail",
-        message: "No student found with that ID",
+        message: "No landlord found with that ID",
       });
     }
 
     res.status(200).json({
       status: "success",
       data: {
-        student,
+        landlord,
       },
     });
   } catch (err) {
@@ -111,24 +108,24 @@ exports.getStudent = async (req, res) => {
   }
 };
 
-exports.updateStudent = async (req, res) => {
+exports.updateLandlord = async (req, res) => {
   try {
-    const student = await Student.findByIdAndUpdate(req.params.id, req.body, {
+    const landlord = await Landlord.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
 
-    if (!student) {
+    if (!landlord) {
       return res.status(404).json({
         status: "fail",
-        message: "No student found with that ID",
+        message: "No landlord found with that ID",
       });
     }
 
     res.status(200).json({
       status: "success",
       data: {
-        student,
+        landlord,
       },
     });
   } catch (err) {
@@ -139,14 +136,14 @@ exports.updateStudent = async (req, res) => {
   }
 };
 
-exports.deleteStudent = async (req, res) => {
+exports.deleteLandlord = async (req, res) => {
   try {
-    const student = await Student.findByIdAndDelete(req.params.id);
+    const landlord = await Landlord.findByIdAndDelete(req.params.id);
 
-    if (!student) {
+    if (!landlord) {
       return res.status(404).json({
         status: "fail",
-        message: "No student found with that ID",
+        message: "No landlord found with that ID",
       });
     }
 
