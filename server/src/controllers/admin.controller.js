@@ -7,25 +7,40 @@ const config = require("../config");
 const AppError = require("../utils/appError");
 
 const signToken = (id) => {
-  return jwt.sign({ id }, config.jwtSecret, {
-    expiresIn: config.jwtExpiresIn,
-  });
+  try {
+    return jwt.sign({ id }, config.jwtSecret, {
+      expiresIn: config.jwtExpiresIn,
+    });
+  } catch (error) {
+    console.error('Error signing token:', error);
+    throw error;
+  }
 };
 
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+    console.log('Login attempt for:', email); // Log the login attempt
+
     // 1) Check if email and password exist
     if (!email || !password) {
-      return next(new AppError("Please provide email and password", 400));
+      return res.status(400).json({ status: "fail", message: "Please provide email and password" });
     }
 
     // 2) Check if admin exists && password is correct
     const admin = await Admin.findOne({ email }).select("+password");
+    console.log('Admin found:', !!admin); // Log whether admin was found
 
-    if (!admin || !(await admin.correctPassword(password, admin.password))) {
-      return next(new AppError("Incorrect email or password", 401));
+    if (!admin) {
+      return res.status(401).json({ status: "fail", message: "Incorrect email or password" });
+    }
+
+    const isPasswordCorrect = await admin.correctPassword(password, admin.password);
+    console.log('Password correct:', isPasswordCorrect); // Log password check result
+
+    if (!isPasswordCorrect) {
+      return res.status(401).json({ status: "fail", message: "Incorrect email or password" });
     }
 
     // 3) If everything ok, send token to client
@@ -42,7 +57,8 @@ exports.login = async (req, res, next) => {
       },
     });
   } catch (err) {
-    next(err);
+    console.error('Login error:', err); // Log any errors
+    res.status(500).json({ status: "error", message: "An error occurred during login" });
   }
 };
 

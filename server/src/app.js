@@ -32,6 +32,8 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
+console.log("Access API documentation: http://localhost:5000/api-docs");
+
 // Routes
 app.use("/api/admin", adminRoutes);
 app.use("/api/students", studentRoutes);
