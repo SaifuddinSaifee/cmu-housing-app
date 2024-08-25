@@ -7,6 +7,10 @@ const ApartmentSchema = new mongoose.Schema(
       ref: "Landlord",
       required: [true, "Apartment must belong to a landlord"],
     },
+    landlordName: {
+      type: String,
+      required: [true, "Landlord name is required"],
+    },
     address: {
       street: {
         type: String,
@@ -77,9 +81,9 @@ const ApartmentSchema = new mongoose.Schema(
       default: true,
     },
     requiredDocuments: [String],
-    leaseTerms: {
+    termsAndConditions: {
       type: String,
-      required: [true, "Please provide the lease terms"],
+      required: [true, "Please provide the terms and conditions"],
     },
   },
   {

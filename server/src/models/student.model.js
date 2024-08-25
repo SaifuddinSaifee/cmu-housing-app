@@ -65,6 +65,12 @@ const StudentSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    savedListings: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "Apartment",
+      },
+    ],
   },
   {
     timestamps: true,
